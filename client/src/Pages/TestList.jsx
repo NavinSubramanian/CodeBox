@@ -17,7 +17,7 @@ const TestList = () => {
     useEffect(() => {
         const fetchTests = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/tests/assigned-tests', {
+                const res = await axios.get('https://code-box-backend.vercel.app/api/tests/assigned-tests', {
                     headers: { 'email': email } // Send the email as part of the request headers
                 });
                 setTests(res.data.tests);

@@ -32,7 +32,7 @@ const LeaderboardPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/leaderboard');
+                const response = await axios.get('https://code-box-backend.vercel.app/api/leaderboard');
                 setData(response.data);
                 setFilteredData(response.data);
             } catch (error) {

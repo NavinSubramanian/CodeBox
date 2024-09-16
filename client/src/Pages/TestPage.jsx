@@ -21,7 +21,7 @@ const TestPage = () => {
                 const token = Cookies.get('token');
                 const email = Cookies.get('email');
                 
-                const res = await axios.get(`http://localhost:5000/api/tests/${testid}/check-attendance`, {
+                const res = await axios.get(`https://code-box-backend.vercel.app/api/tests/${testid}/check-attendance`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         email: email
@@ -42,7 +42,7 @@ const TestPage = () => {
         const fetchTestQuestions = async () => {
             try {
                 const token = Cookies.get('token');
-                const res = await axios.get(`http://localhost:5000/api/tests/${testid}`, {
+                const res = await axios.get(`https://code-box-backend.vercel.app/api/tests/${testid}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 
@@ -163,13 +163,13 @@ const TestPage = () => {
         try {
             const token = Cookies.get('token');
             const email = Cookies.get('email');
-            // await axios.post(`http://localhost:5000/api/tests/${testid}/submit`, {
+            // await axios.post(`https://code-box-backend.vercel.app/api/tests/${testid}/submit`, {
             //     answers: answers,
             //     email: email
             // }, {
             //     headers: { Authorization: `Bearer ${token}` }
             // });
-            await axios.put(`http://localhost:5000/api/tests/${testid}/update`, {
+            await axios.put(`https://code-box-backend.vercel.app/api/tests/${testid}/update`, {
                 score: finalScore,
                 email: email,
                 timeTaken: formattedTimeTaken

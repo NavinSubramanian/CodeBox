@@ -16,7 +16,7 @@ const TestPage = () => {
             const fetchTestQuestions = async () => {
                 try {
                     const token = Cookies.get('token');
-                    const res = await axios.get(`http://localhost:5000/api/tests/${testid}`, {
+                    const res = await axios.get(`https://code-box-backend.vercel.app/api/tests/${testid}`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     setQuestions(res.data.questions || []);
@@ -52,7 +52,7 @@ const TestPage = () => {
     const submitTest = async (submittedAnswers) => {
         try {
             const token = Cookies.get('token');
-            const res = await axios.post(`http://localhost:5000/api/tests/${testid}/submit`, {
+            const res = await axios.post(`https://code-box-backend.vercel.app/api/tests/${testid}/submit`, {
                 answers: submittedAnswers
             }, {
                 headers: { Authorization: `Bearer ${token}` }

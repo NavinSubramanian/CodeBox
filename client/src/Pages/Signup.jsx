@@ -32,7 +32,7 @@ const SignUp = () => {
 
     const handleSignUp = async () => {
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/signup', { 
+            const res = await axios.post('https://code-box-backend.vercel.app/api/auth/signup', { 
                 email, 
                 password, 
                 department, 
@@ -49,7 +49,7 @@ const SignUp = () => {
 
     const handleVerifyOTP = async () => {
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/verify-otp', { email, otp });
+            const res = await axios.post('https://code-box-backend.vercel.app/api/auth/verify-otp', { email, otp });
             alert(res.data.message);
             dispatch({ type: 'SET_USER', payload: { email, isAdmin: false } });
             navigate('/'); // Redirect to home page
@@ -60,7 +60,7 @@ const SignUp = () => {
 
     const handleResendOTP = async () => {
         try {
-            const res = await axios.post('http://localhost:5000/api/auth/resend-otp', { email });
+            const res = await axios.post('https://code-box-backend.vercel.app/api/auth/resend-otp', { email });
             alert(res.data.message);
             setCountdown(600); // Reset countdown
             setOtpSent(true);

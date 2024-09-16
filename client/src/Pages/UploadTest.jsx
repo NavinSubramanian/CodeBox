@@ -35,7 +35,7 @@ const UploadTest = () => {
         formData.append('file', file);
 
         try {
-            const res = await axios.post('http://localhost:5000/api/tests/upload', formData, {
+            const res = await axios.post('https://code-box-backend.vercel.app/api/tests/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 },
