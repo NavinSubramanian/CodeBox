@@ -5,7 +5,7 @@ const connectDB = async () => {
         if (!uri) {
             throw new Error('MongoDB URI is not defined');
         }
-        const conn = await mongoose.connect(process.env.MONGO_URI,{
+        const conn = await mongoose.connect("mongodb://nnavinsubramaniancse2021:40OwVo3jyL117KIK@testcluster-shard-00-00.ovyt5.mongodb.net:27017,testcluster-shard-00-01.ovyt5.mongodb.net:27017,testcluster-shard-00-02.ovyt5.mongodb.net:27017/?ssl=true&",{
             retryWrites: true,
             w: 'majority',
         });
