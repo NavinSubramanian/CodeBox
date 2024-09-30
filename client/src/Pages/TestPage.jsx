@@ -229,7 +229,7 @@ const TestPage = () => {
                         ></div>
                     </div>
 
-                    <div style={{ marginBottom: '20px' }}>
+                    <div style={{ marginBottom: '20px', marginLeft:'20px'}}>
                         Time Remaining: {formatTime(timeRemaining)}
                     </div>
 

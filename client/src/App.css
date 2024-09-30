@@ -596,11 +596,14 @@
 }
 
 .signup-container button {
-  padding: 10px 20px;
+  padding: 10px 30px;
   background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
+  font-family: var(--mainfont);
+  text-transform: uppercase;
+  font-weight: 600;
   cursor: pointer;
 }
 

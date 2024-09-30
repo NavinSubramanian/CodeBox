@@ -76,6 +76,7 @@ const UploadTest = () => {
                 <input
                     type="file"
                     accept=".xlsx"
+                    name='file'
                     onChange={handleFileChange}
                     required
                 />

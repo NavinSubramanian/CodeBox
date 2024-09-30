@@ -133,7 +133,7 @@ const SignUp = () => {
                 )}
                 </div>
                 <hr />
-                <p onClick={() => navigate('/signup')}>Already have an Account?</p>
+                <p onClick={() => navigate('/login')}>Already have an Account?</p>
             </div>
         </div>
         

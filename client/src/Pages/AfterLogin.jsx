@@ -29,15 +29,14 @@ const AfterLogin = () => {
                 <h2>Basic Courses</h2>
                 <div className='courseList'>
                     <CourseDisplay courseid="1" />
-                    <CourseDisplay courseid="2" />
                 </div>
             </div>
 
             <div className='otherCourses'>
                 <h2>Advanced Courses</h2>
                 <div className='courseList'>
-                    <CourseDisplay courseid="3" />
-                    <CourseDisplay courseid="4" />
+                    {/* <CourseDisplay courseid="3" /> */}
+                    <p>Coming soon....</p>
                 </div>
             </div>
 
