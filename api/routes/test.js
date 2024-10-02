@@ -25,10 +25,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Route to upload test and assign to students
-router.post('/upload', authMiddleware, isAdmin, upload.single('file'), async (req, res) => {
+router.post('/upload', upload.single('file'), async (req, res) => {
     const { testName, testDuration, totalScore } = req.body;
     const filePath = req.file.path;
-
+    
     try {
         // Check if testName already exists
         const existingTest = await Test.findOne({ testName });
@@ -88,6 +88,7 @@ router.post('/upload', authMiddleware, isAdmin, upload.single('file'), async (re
         res.status(500).json({ message: 'Error uploading test' });
     }
 });
+
 router.get('/assigned-tests', async (req, res) => {
     const email = req.headers.email;  // Extract the email from request headers
     console.log('Email:', email);
