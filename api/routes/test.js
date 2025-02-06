@@ -1,33 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
 const xlsx = require('xlsx');
-const fs = require('fs');
 const Test = require('../models/Test');
 const User = require('../models/User');
-const { authMiddleware, isAdmin } = require('../middleware/authMiddleware');
 
-// Configure multer for file upload
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = 'uploads/';
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir);
-        }
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    }
-});
-
-const upload = multer({ storage });
+// Configure multer for memory storage
+const upload = multer({ storage: multer.memoryStorage() });
 
 // Route to upload test and assign to students
 router.post('/upload', upload.single('file'), async (req, res) => {
     const { testName, testDuration, totalScore } = req.body;
-    const filePath = req.file.path;
     
     try {
         // Check if testName already exists
@@ -36,8 +19,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             return res.status(400).json({ message: 'Test name already exists' });
         }
 
-        // Read and parse the Excel file
-        const workbook = xlsx.readFile(filePath);
+        // Read and parse the Excel file from memory
+        const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const questions = xlsx.utils.sheet_to_json(sheet);
@@ -47,8 +30,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             testName,
             testDuration,
             totalScore,
-            filePath,
-            questions,  // store parsed questions in the test model
+            questions,
         });
 
         // Assign test to all non-admin students
@@ -62,61 +44,27 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         });
 
         await newTest.save();
-
-        // Delete the file after successful upload
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error('Error deleting file:', err);
-            } else {
-                console.log(`File ${filePath} deleted successfully`);
-            }
-        });
-
         res.status(200).json({ message: 'Test uploaded and assigned successfully' });
     } catch (error) {
         console.error('Error uploading test:', error);
-
-        // Attempt to delete the file if there was an error during processing
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error('Error deleting file after failure:', err);
-            } else {
-                console.log(`File ${filePath} deleted after failure`);
-            }
-        });
-
         res.status(500).json({ message: 'Error uploading test' });
     }
 });
 
+// Route to get assigned tests
 router.get('/assigned-tests', async (req, res) => {
-    const email = req.headers.email;  // Extract the email from request headers
-    console.log('Email:', email);
+    const email = req.headers.email;
 
     try {
-        // Find the user by email to get the userId
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const userId = user._id;  // Get the user's ID
-        console.log('User ID:', userId);
-
-        // Find tests that are assigned to the user but not yet attended
         const tests = await Test.find({
-            assignedTo: {
-                $elemMatch: {
-                    studentId: userId,
-                    isAttended: false  // Only get tests where isAttended is false
-                }
-            }
+            assignedTo: { $elemMatch: { studentId: user._id, isAttended: false } }
         }).select('testId testName testDescription assignedTo');
 
-        // Debugging output to check what's being fetched
-        console.log('Fetched Tests:', tests);
-
-        // Send the tests response
         res.status(200).json({ tests });
     } catch (error) {
         console.error('Error fetching tests:', error);
@@ -124,47 +72,41 @@ router.get('/assigned-tests', async (req, res) => {
     }
 });
 
-
-
-router.get('/:testId',  async (req, res) => {
+// Route to get test questions
+router.get('/:testId', async (req, res) => {
     const { testId } = req.params;
-    console.log(testId)
+
     try {
         const test = await Test.findById(testId);
         if (!test) {
             return res.status(404).json({ message: 'Test not found' });
         }
 
-        // Send the test questions to the client
-        res.status(200).json({ questions: test.questions,duration:test.testDuration });
+        res.status(200).json({ questions: test.questions, duration: test.testDuration });
     } catch (error) {
-        console.log(error)
         console.error('Error fetching test questions:', error);
         res.status(500).json({ message: 'Error fetching test questions' });
     }
 });
+
+// Route to check attendance status
 router.get('/:testId/check-attendance', async (req, res) => {
     const { testId } = req.params;
-    const email = req.headers.email; // Extract email from request headers
-console.log(email,testId)
+    const email = req.headers.email;
+
     try {
-        // Find the user by email to get the user ID
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const userId = user._id; // Get the user's ID
-
-        // Find the test by ID
         const test = await Test.findById(testId);
         if (!test) {
             return res.status(404).json({ message: 'Test not found' });
         }
 
-        // Check if the user (student) is assigned to the test
         const studentTest = test.assignedTo.find(
-            (assignment) => assignment.studentId.toString() === userId.toString()
+            (assignment) => assignment.studentId.toString() === user._id.toString()
         );
 
         if (studentTest) {
@@ -178,39 +120,28 @@ console.log(email,testId)
     }
 });
 
-
- // Make sure to import the User model
-
+// Route to submit test
 router.post('/:testId/submit', async (req, res) => {
     const { testId } = req.params;
-    const { answers, email } = req.body;
+    const { email } = req.body;
 
     try {
-        // Find the user by emails
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const userId = user._id; // Extract the user's ID
-
-        // Find the test by ID
         const test = await Test.findById(testId);
         if (!test) {
             return res.status(404).json({ message: 'Test not found' });
         }
 
-        // Find the student’s test assignment
         const studentTest = test.assignedTo.find(
-            (assignment) => assignment.studentId.toString() === userId.toString()
+            (assignment) => assignment.studentId.toString() === user._id.toString()
         );
 
         if (studentTest) {
             studentTest.isAttended = true;
-
-            // Optional: Update answers if required
-            // studentTest.answers = answers;
-
             await test.save();
             res.status(200).json({ message: 'Test submission received' });
         } else {
@@ -222,38 +153,30 @@ router.post('/:testId/submit', async (req, res) => {
     }
 });
 
-
- // Make sure to import the User model
-
+// Route to update score
 router.put('/:testId/update', async (req, res) => {
     const { testId } = req.params;
-    const { score, email,timeTaken } = req.body;
+    const { score, email, timeTaken } = req.body;
 
     try {
-        // Find the user by email
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        const userId = user._id; // Extract the user's ID
-
-        // Find the test by ID
         const test = await Test.findById(testId);
         if (!test) {
             return res.status(404).json({ message: 'Test not found' });
         }
 
-        // Find the student’s test assignment
         const studentTest = test.assignedTo.find(
-            (assignment) => assignment.studentId.toString() === userId.toString()
+            (assignment) => assignment.studentId.toString() === user._id.toString()
         );
-console.log(studentTest)
+
         if (studentTest) {
-            console.log("score",score)
             studentTest.marksScored = score;
-            studentTest.timecompleted=timeTaken
-            studentTest.isAttended=true
+            studentTest.timecompleted = timeTaken;
+            studentTest.isAttended = true;
             await test.save();
             res.status(200).json({ message: 'Score updated successfully' });
         } else {
@@ -264,7 +187,5 @@ console.log(studentTest)
         res.status(500).json({ message: 'Error updating score' });
     }
 });
-
-
 
 module.exports = router;

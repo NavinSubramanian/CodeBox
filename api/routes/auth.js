@@ -68,10 +68,21 @@ router.post('/verify-otp', async (req, res) => {
             user.otp = null;
             await user.save();
 
+            // Assign all existing tests to the verified user
+            const tests = await Test.find({});
+            for (let test of tests) {
+                test.assignedTo.push({
+                    studentId: user._id,
+                    isAttended: false,
+                    marksScored: 0
+                });
+                await test.save();
+            }
+
             const token = jwt.sign({ email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
             res.cookie('token', token, { httpOnly: true });
-            return res.status(200).json({ message: 'OTP verified', token });
+            return res.status(200).json({ message: 'OTP verified, tests assigned', token });
         } else {
             return res.status(400).json({ message: 'Invalid OTP' });
         }
